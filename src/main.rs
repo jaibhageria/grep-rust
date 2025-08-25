@@ -9,6 +9,8 @@ fn match_pattern(input_line: &str, pattern: &str) -> bool {
         return input_line.chars().any(|c| c.is_numeric());
     } else if pattern.contains("\\w") {
         return input_line.chars().any(|c| c.is_alphanumeric() || c == '_');
+    } else if pattern.starts_with("[^") && pattern.ends_with("]") {
+        return input_line.chars().any(|c| !pattern[2..pattern.len()-1].contains(c));
     } else if pattern.starts_with("[") && pattern.ends_with("]") {
         return input_line.chars().any(|c| pattern[1..pattern.len()-1].contains(c));
     } else {
