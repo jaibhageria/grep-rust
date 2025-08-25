@@ -129,10 +129,17 @@ use std::process;
 fn match_pattern(input_line: &str, pattern: &str) -> bool {
     // Try to match the pattern starting at every position in the input
     let chars: Vec<char> = input_line.chars().collect();
-    for i in 0..=chars.len() {
-        let remaining_input: String = chars[i..].iter().collect();
-        if match_pattern_at_position(&remaining_input, pattern) {
+    if pattern.starts_with('^') {
+        let remaining_pattern: String = pattern.chars().skip(1).collect();
+        if match_pattern_at_position(&input_line, &remaining_pattern) {
             return true;
+        }
+    } else {
+        for i in 0..=chars.len() {
+            let remaining_input: String = chars[i..].iter().collect();
+            if match_pattern_at_position(&remaining_input, pattern) {
+                return true;
+            }
         }
     }
     false
