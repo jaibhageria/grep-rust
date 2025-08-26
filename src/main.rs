@@ -135,7 +135,50 @@ fn match_pattern_at_position(input_line: &str, pattern: &str, must_consume_all: 
             panic!("Unclosed character class in pattern: {}", pattern);
         }
     }
-    
+
+    // Handle repetition operators (*, +, ?)
+    if let Some(repeat_op) = pattern.chars().nth(1) {
+        match repeat_op {
+            '+' => {
+                let pattern_char = pattern.chars().next().unwrap();
+                let remaining_pattern: String = pattern.chars().skip(2).collect();
+                
+                // Must match at least one character
+                if let Some(first_input_char) = input_line.chars().next() {
+                    if first_input_char != pattern_char {
+                        return false;
+                    }
+                    
+                    // Try matching with different amounts of the repeated character
+                    let mut current_input = input_line;
+                    
+                    // Consume characters while they match
+                    while !current_input.is_empty() {
+                        if let Some(next_char) = current_input.chars().next() {
+                            if next_char == pattern_char {
+                                current_input = &current_input[next_char.len_utf8()..];
+                                
+                                // Try matching the rest of the pattern at this position
+                                if match_pattern_at_position(current_input, &remaining_pattern, must_consume_all) {
+                                    return true;
+                                }
+                            } else {
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // Try one final match if we consumed all characters
+                    return match_pattern_at_position(current_input, &remaining_pattern, must_consume_all);
+                }
+                return false;
+            }
+            _ => {}
+        }
+    }
+
     // Handle literal character matching
     let pattern_char = pattern.chars().next().unwrap();
     let input_char = input_line.chars().next().unwrap();
