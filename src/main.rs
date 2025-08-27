@@ -145,7 +145,13 @@ fn match_pattern_at_position(input_line: &str, pattern: &str, must_consume_all: 
                 
                 // Must match at least one character
                 if let Some(first_input_char) = input_line.chars().next() {
-                    if first_input_char != pattern_char {
+                    let char_matches = if pattern_char == '.' {
+                        true
+                    } else {
+                        first_input_char == pattern_char
+                    };
+
+                    if !char_matches {
                         return false;
                     }
                     
@@ -155,7 +161,13 @@ fn match_pattern_at_position(input_line: &str, pattern: &str, must_consume_all: 
                     // Consume characters while they match
                     while !current_input.is_empty() {
                         if let Some(next_char) = current_input.chars().next() {
-                            if next_char == pattern_char {
+                            let next_char_matches = if pattern_char == '.' {
+                                true
+                            } else {
+                                next_char == pattern_char
+                            };
+
+                            if next_char_matches {
                                 current_input = &current_input[next_char.len_utf8()..];
                                 
                                 // Try matching the rest of the pattern at this position
@@ -189,7 +201,12 @@ fn match_pattern_at_position(input_line: &str, pattern: &str, must_consume_all: 
                 
                 while !current_input.is_empty() {
                     if let Some(next_char) = current_input.chars().next() {
-                        if next_char == pattern_char {
+                        let char_matches = if pattern_char == '.' {
+                            true
+                        } else {
+                            next_char == pattern_char
+                        };
+                        if char_matches {
                             current_input = &current_input[next_char.len_utf8()..];
                             
                             // Try matching the rest of the pattern at this position
@@ -217,12 +234,32 @@ fn match_pattern_at_position(input_line: &str, pattern: &str, must_consume_all: 
                 
                 // Try consuming one character if it matches
                 if let Some(first_char) = input_line.chars().next() {
-                    if first_char == pattern_char {
+                    let char_matches = if pattern_char == '.' {
+                        true
+                    } else {
+                        first_char == pattern_char
+                    };
+                    if char_matches {
                         let remaining_input = &input_line[first_char.len_utf8()..];
                         return match_pattern_at_position(remaining_input, &remaining_pattern, must_consume_all);
                     }
                 }
                 
+                return false;
+            }
+            _ => {}
+        }
+    }
+
+    // Handle operator (.)
+    if let Some(single_op) = pattern.chars().nth(0) {
+        match single_op {
+            '.' => {
+                let remaining_pattern: String = pattern.chars().skip(1).collect();
+                if let Some(first_char) = input_line.chars().next() {
+                    let remaining_input = &input_line[first_char.len_utf8()..];
+                    return match_pattern_at_position(remaining_input, &remaining_pattern, must_consume_all);
+                }
                 return false;
             }
             _ => {}
