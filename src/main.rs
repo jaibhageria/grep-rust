@@ -175,6 +175,56 @@ fn match_pattern_at_position(input_line: &str, pattern: &str, must_consume_all: 
                 }
                 return false;
             }
+            '*' => {
+                let pattern_char = pattern.chars().next().unwrap();
+                let remaining_pattern: String = pattern.chars().skip(2).collect();
+                
+                // Try matching without consuming any characters first
+                if match_pattern_at_position(input_line, &remaining_pattern, must_consume_all) {
+                    return true;
+                }
+                
+                // Try matching with different amounts of the repeated character
+                let mut current_input = input_line;
+                
+                while !current_input.is_empty() {
+                    if let Some(next_char) = current_input.chars().next() {
+                        if next_char == pattern_char {
+                            current_input = &current_input[next_char.len_utf8()..];
+                            
+                            // Try matching the rest of the pattern at this position
+                            if match_pattern_at_position(current_input, &remaining_pattern, must_consume_all) {
+                                return true;
+                            }
+                        } else {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                
+                return false;
+            }
+            '?' => {
+                let pattern_char = pattern.chars().next().unwrap();
+                let remaining_pattern: String = pattern.chars().skip(2).collect();
+                
+                // Try without consuming the character first
+                if match_pattern_at_position(input_line, &remaining_pattern, must_consume_all) {
+                    return true;
+                }
+                
+                // Try consuming one character if it matches
+                if let Some(first_char) = input_line.chars().next() {
+                    if first_char == pattern_char {
+                        let remaining_input = &input_line[first_char.len_utf8()..];
+                        return match_pattern_at_position(remaining_input, &remaining_pattern, must_consume_all);
+                    }
+                }
+                
+                return false;
+            }
             _ => {}
         }
     }
